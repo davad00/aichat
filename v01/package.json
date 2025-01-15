@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:quick": "cross-env NEXT_TELEMETRY_DISABLED=1 NODE_ENV=production SKIP_TYPE_CHECK=true next build --no-lint --no-mangling",
     "start": "next start",
     "lint": "next lint"
   },
