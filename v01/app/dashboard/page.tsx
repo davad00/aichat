@@ -1,104 +1,189 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
+import { useAuth } from '@/lib/context/AuthContext';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    apiKey: '',
+    primaryColor: '#007bff',
+    fontFamily: 'Inter',
+    position: 'right',
+    welcomeMessage: 'Hi! How can I help you today?',
+    selectedModel: 'openai/gpt-3.5-turbo',
+  });
+
+  const handleSaveSettings = async () => {
+    try {
+      const response = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Settings saved successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const embedCode = `<script>
+  window.ChatWidgetSettings = {
+    apiKey: "${settings.apiKey}",
+    primaryColor: "${settings.primaryColor}",
+    fontFamily: "${settings.fontFamily}",
+    position: "${settings.position}",
+    welcomeMessage: "${settings.welcomeMessage}",
+    selectedModel: "${settings.selectedModel}"
+  };
+</script>
+<script src="${process.env.NEXT_PUBLIC_APP_URL}/widget.js" async></script>`;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Chat Widget Configuration</h1>
-        <p className="text-muted-foreground">Customize your chat widget appearance and behavior.</p>
-      </div>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-      <Tabs defaultValue="appearance">
+      <Tabs defaultValue="settings">
         <TabsList>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="behavior">Behavior</TabsTrigger>
-          <TabsTrigger value="ai-model">AI Model</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="embed">Embed Code</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="appearance" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Theme Customization</CardTitle>
-              <CardDescription>Customize the look and feel of your chat widget</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Primary Color</Label>
-                  <Input type="color" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Font Family</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inter">Inter</SelectItem>
-                      <SelectItem value="roboto">Roboto</SelectItem>
-                      <SelectItem value="system">System Font</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button>Save Changes</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="behavior" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chat Behavior</CardTitle>
-              <CardDescription>Configure how the chat widget behaves</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Initial Message</Label>
-                <Input placeholder="Enter initial greeting message" />
+        <TabsContent value="settings">
+          <Card className="p-6">
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="apiKey">OpenRouter API Key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={settings.apiKey}
+                  onChange={(e) =>
+                    setSettings({ ...settings, apiKey: e.target.value })
+                  }
+                />
               </div>
-              <div className="space-y-2">
-                <Label>Response Delay (ms)</Label>
-                <Input type="number" placeholder="1000" />
-              </div>
-              <Button>Save Changes</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="ai-model" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Model Configuration</CardTitle>
-              <CardDescription>Select and configure your AI model</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>OpenRouter API Key</Label>
-                <Input type="password" placeholder="Enter your API key" />
+              <div>
+                <Label htmlFor="primaryColor">Primary Color</Label>
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={settings.primaryColor}
+                  onChange={(e) =>
+                    setSettings({ ...settings, primaryColor: e.target.value })
+                  }
+                />
               </div>
-              <div className="space-y-2">
-                <Label>AI Model</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="claude-2">Claude 2</SelectItem>
-                  </SelectContent>
+
+              <div>
+                <Label htmlFor="fontFamily">Font Family</Label>
+                <Select
+                  value={settings.fontFamily}
+                  onValueChange={(value) =>
+                    setSettings({ ...settings, fontFamily: value })
+                  }
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
                 </Select>
               </div>
-              <Button>Save Changes</Button>
-            </CardContent>
+
+              <div>
+                <Label htmlFor="position">Widget Position</Label>
+                <Select
+                  value={settings.position}
+                  onValueChange={(value) =>
+                    setSettings({
+                      ...settings,
+                      position: value as 'left' | 'right',
+                    })
+                  }
+                >
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="welcomeMessage">Welcome Message</Label>
+                <Input
+                  id="welcomeMessage"
+                  value={settings.welcomeMessage}
+                  onChange={(e) =>
+                    setSettings({ ...settings, welcomeMessage: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="selectedModel">AI Model</Label>
+                <Select
+                  value={settings.selectedModel}
+                  onValueChange={(value) =>
+                    setSettings({ ...settings, selectedModel: value })
+                  }
+                >
+                  <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="openai/gpt-4">GPT-4</option>
+                  <option value="anthropic/claude-2">Claude 2</option>
+                </Select>
+              </div>
+
+              <Button onClick={handleSaveSettings}>Save Settings</Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <Card className="p-6">
+            <p className="text-muted-foreground">
+              Analytics features coming soon...
+            </p>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="embed">
+          <Card className="p-6">
+            <Label>Embed Code</Label>
+            <pre className="mt-2 p-4 bg-muted rounded-lg overflow-x-auto">
+              <code>{embedCode}</code>
+            </pre>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => {
+                navigator.clipboard.writeText(embedCode);
+                toast({
+                  title: 'Copied!',
+                  description: 'Embed code copied to clipboard',
+                });
+              }}
+            >
+              Copy Code
+            </Button>
           </Card>
         </TabsContent>
       </Tabs>

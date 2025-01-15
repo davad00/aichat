@@ -1,15 +1,11 @@
+'use client';
+
 import './globals.css';
-import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/lib/context/AuthContext';
+import { Toaster } from '@/components/ui/toast';
 
 const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: 'AI Chat Support Platform',
-  description: 'Enterprise-grade AI chat support platform powered by OpenRouter',
-};
 
 export default function RootLayout({
   children,
@@ -17,12 +13,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
           {children}
           <Toaster />
-        </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
